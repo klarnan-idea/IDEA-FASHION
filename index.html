@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ระบบจัดการหน้าร้าน</title>
+  
+  <!-- ======================================================== -->
+  <!-- 🎨 ส่วนตั้งค่าไอคอนสำหรับ Web App (iOS & Android) -->
+  <!-- ======================================================== -->
+  
+  <link rel="apple-touch-icon" sizes="180x180" href="https://i.postimg.cc/x10n8rW9/830562405-1623844549331660-6803901096834623733-n-(1).png">
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/x10n8rW9/830562405-1623844549331660-6803901096834623733-n-(1).png">
+  <link rel="icon" type="image/png" sizes="192x192" href="https://i.postimg.cc/x10n8rW9/830562405-1623844549331660-6803901096834623733-n-(1).png">
+  <link rel="icon" type="image/png" sizes="512x512" href="https://i.postimg.cc/x10n8rW9/830562405-1623844549331660-6803901096834623733-n-(1).png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://i.postimg.cc/x10n8rW9/830562405-1623844549331660-6803901096834623733-n-(1).png">
+  <link rel="shortcut icon" href="https://i.postimg.cc/x10n8rW9/830562405-1623844549331660-6803901096834623733-n-(1).png">
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <!-- 🟢 สำคัญมาก: เชื่อมโยงไฟล์ Web App Manifest สำหรับ PWA (GitHub) -->
+  <link rel="manifest" href="manifest.json">
+  
+  <meta name="theme-color" content="#c22055"> 
+  <meta name="msapplication-TileColor" content="#c22055">
+  <meta name="apple-mobile-web-app-title" content="IDEA FASHION">
+  <meta name="application-name" content="IDEA FASHION">
+  <!-- ======================================================== -->
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Sarabun', sans-serif; }
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .tab-active { background-color: #f8fafc; color: #1e3a8a; border-bottom: 3px solid #facc15; }
+    .tab-inactive { background-color: #1e3a8a; color: #cbd5e1; }
+  </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen text-slate-800 text-sm">
+
+  <datalist id="skuList">
+    <option value="100"></option><option value="120"></option><option value="150"></option><option value="180"></option>
+    <option value="200"></option><option value="250"></option><option value="300"></option><option value="350"></option>
+    <option value="400"></option><option value="79"></option><option value="59"></option><option value="50"></option>
+    <option value="39"></option><option value="35"></option><option value="25"></option><option value="20"></option>
+    <option value="1แถม1"></option><option value="3ตัว100"></option>
+  </datalist>
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="fixed inset-0 bg-slate-200 z-[100] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center border-t-8 border-blue-600">
+      <h2 class="text-2xl font-bold text-slate-800 mb-2">ยินดีต้อนรับ</h2>
+      <p class="text-slate-500 mb-6">กรุณาใส่รหัสประจำสาขาเพื่อเข้าสู่ระบบ</p>
+      
+      <input type="password" id="pinInput" placeholder="รหัส PIN" class="w-full text-center text-2xl tracking-[0.5em] border-2 border-slate-300 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition">
+      
+      <button onclick="handleLogin()" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg py-3 rounded-lg shadow-md active:scale-95 transition flex items-center justify-center gap-2">
+        🔓 เข้าสู่ระบบ
+      </button>
+      <p id="loginError" class="text-rose-500 font-semibold mt-4 hidden"></p>
+    </div>
+  </div>
+
+  <!-- 👑 ADMIN DASHBOARD WRAPPER -->
+  <div id="adminContainer" class="hidden min-h-screen bg-slate-100 pb-10">
+    <header class="bg-indigo-900 text-white shadow-md sticky top-0 z-50 pt-3 pb-3">
+      <div class="max-w-[1400px] mx-auto px-4 flex flex-wrap justify-between items-center gap-3">
+        <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2">👑 Executive Dashboard (ยอดขายรายวัน 29 สาขา)</h1>
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="flex items-center gap-2 bg-indigo-800/80 px-3 py-1.5 rounded-lg border border-indigo-500 text-sm">
+            <span class="font-semibold text-yellow-300">เรียกดูข้อมูลวันที่:</span>
+            <select id="admDay" class="bg-white text-slate-900 font-bold rounded px-1 py-0.5 focus:outline-none"><script>for(let d=1; d<=31; d++) document.write(`<option value="${d}" ${d===1?'selected':''}>${d}</option>`);</script></select>
+            <select id="admMonth" class="bg-white text-slate-900 font-bold rounded px-1 py-0.5 focus:outline-none">
+              <option value="มกราคม">มกราคม</option><option value="กุมภาพันธ์">กุมภาพันธ์</option><option value="มีนาคม">มีนาคม</option><option value="เมษายน">เมษายน</option>
+              <option value="พฤษภาคม">พฤษภาคม</option><option value="มิถุนายน">มิถุนายน</option><option value="กรกฎาคม">กรกฎาคม</option><option value="สิงหาคม">สิงหาคม</option>
+              <option value="กันยายน" selected>กันยายน</option><option value="ตุลาคม">ตุลาคม</option><option value="พฤศจิกายน">พฤศจิกายน</option><option value="ธันวาคม">ธันวาคม</option>
+            </select>
+            <select id="admYear" class="bg-white text-slate-900 font-bold rounded px-1 py-0.5 focus:outline-none"><script>for(let y=2568; y<=2572; y++) document.write(`<option value="${y}" ${y===2569?'selected':''}>${y}</option>`);</script></select>
+          </div>
+          <button onclick="fetchAdminData()" id="btnFetchAdmin" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-1.5 rounded shadow transition flex items-center gap-1"><span id="admBtnTxt">🔄 ดึงข้อมูล</span></button>
+          <button onclick="logoutAdmin()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold px-4 py-1.5 rounded shadow transition">ออกจากระบบ</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-[1400px] mx-auto p-4 mt-4 space-y-6">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500"><p class="text-slate-500 text-xs font-bold mb-1">ยอด POS รวมทั้งบริษัท</p><p id="admTotPos" class="text-xl font-bold text-blue-700">0</p></div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500"><p class="text-slate-500 text-xs font-bold mb-1">ยอดขายจริงรวมทั้งบริษัท</p><p id="admTotAct" class="text-xl font-bold text-emerald-700">0</p></div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-amber-500"><p class="text-slate-500 text-xs font-bold mb-1">เงิน ขาด/เกิน รวม</p><p id="admTotDiff" class="text-xl font-bold text-amber-700">0</p></div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-rose-500"><p class="text-slate-500 text-xs font-bold mb-1">รายจ่ายรวมทั้งหมด</p><p id="admTotExp" class="text-xl font-bold text-rose-600">0</p></div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500"><p class="text-slate-500 text-xs font-bold mb-1">เงินฝากรวมทั้งหมด</p><p id="admTotDep" class="text-xl font-bold text-indigo-700">0</p></div>
+      </div>
+      
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+         <div class="bg-slate-800 text-white px-4 py-2 font-bold flex flex-wrap justify-between items-center gap-2">
+           <span>📊 รายละเอียดรายสาขา (ข้อมูลบันทึกรายวัน)</span>
+           <span id="admStatus" class="text-xs text-emerald-400 font-semibold bg-slate-700 px-3 py-1 rounded">รอการดึงข้อมูล...</span>
+         </div>
+         <div class="overflow-x-auto max-h-[600px]">
+           <table class="w-full text-sm text-center border-collapse min-w-[900px]">
+             <thead class="bg-slate-100 text-slate-700 font-bold border-b-2 border-slate-300 sticky top-0 shadow-sm">
+               <tr>
+                 <th class="p-3 border-r text-left w-56">รายชื่อสาขา (29 สาขา)</th>
+                 <th class="p-3 border-r text-blue-800">ยอด POS</th>
+                 <th class="p-3 border-r text-emerald-800">ยอดขายจริง</th>
+                 <th class="p-3 border-r">เงินขาด/เกิน</th>
+                 <th class="p-3 border-r text-rose-700">รายจ่าย</th>
+                 <th class="p-3 border-r text-indigo-700">เงินฝาก</th>
+                 <th class="p-3 text-slate-500">สถานะการบันทึก</th>
+               </tr>
+             </thead>
+             <tbody id="adminTableBody" class="divide-y divide-slate-200">
+                <tr><td colspan="7" class="p-10 text-slate-500 text-lg">กรุณากดปุ่ม "ดึงข้อมูล" เพื่อดูยอดขายรายวันของทุกสาขา</td></tr>
+             </tbody>
+           </table>
+         </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MAIN APP WRAPPER -->
+  <div id="appContainer" class="hidden">
+    
+    <header class="bg-blue-800 text-white shadow-md sticky top-0 z-50 pt-2">
+      <div class="max-w-[1600px] mx-auto px-4">
+        <div class="flex flex-wrap justify-between items-end gap-3 border-b border-blue-700">
+          <div class="flex gap-1 overflow-x-auto">
+            <button id="tabBtnDaily" onclick="switchTab('daily')" class="tab-active px-6 py-2.5 rounded-t-lg font-bold text-base transition-colors duration-200 whitespace-nowrap">📝 บันทึกรายวัน</button>
+            <button id="tabBtnSummary" onclick="switchTab('summary')" class="tab-inactive hover:bg-blue-700 px-6 py-2.5 rounded-t-lg font-bold text-base transition-colors duration-200 whitespace-nowrap">📊 สรุปภาพรวมรายเดือน</button>
+            <button id="tabBtnYearly" onclick="switchTab('yearly')" class="tab-inactive hover:bg-blue-700 px-6 py-2.5 rounded-t-lg font-bold text-base transition-colors duration-200 whitespace-nowrap">📈 สรุปภาพรวมรายปี</button>
+          </div>
+          <div id="dailyControls" class="flex items-center gap-3 pb-2">
+            <div class="flex items-center gap-2 bg-blue-900/80 px-3 py-1 rounded-lg border border-blue-600">
+              <span class="font-semibold text-yellow-300">วันที่:</span>
+              <select id="selectDay" class="bg-white text-slate-900 font-bold rounded px-1 py-0.5 focus:outline-none"><script>for(let d=1; d<=31; d++) document.write(`<option value="${d}" ${d===1?'selected':''}>${d}</option>`);</script></select>
+              <select id="selectMonth" class="bg-white text-slate-900 font-bold rounded px-1 py-0.5 focus:outline-none">
+                <option value="มกราคม">มกราคม</option><option value="กุมภาพันธ์">กุมภาพันธ์</option><option value="มีนาคม">มีนาคม</option><option value="เมษายน">เมษายน</option>
+                <option value="พฤษภาคม">พฤษภาคม</option><option value="มิถุนายน">มิถุนายน</option><option value="กรกฎาคม">กรกฎาคม</option><option value="สิงหาคม">สิงหาคม</option>
+                <option value="กันยายน" selected>กันยายน</option><option value="ตุลาคม">ตุลาคม</option><option value="พฤศจิกายน">พฤศจิกายน</option><option value="ธันวาคม">ธันวาคม</option>
+              </select>
+              <select id="selectYear" class="bg-white text-slate-900 font-bold rounded px-1 py-0.5 focus:outline-none">
+                <script>for(let y=2568; y<=2572; y++) document.write(`<option value="${y}" ${y===2569?'selected':''}>${y}</option>`);</script>
+              </select>
+            </div>
+            <button onclick="requestClearData()" class="bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-bold px-3 py-1.5 rounded shadow transition">🗑️ ขึ้นเดือนใหม่</button>
+            <button onclick="saveData()" class="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold px-4 py-1.5 rounded shadow transition">💾 บันทึกประจำวัน</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="pageDaily" class="max-w-[1600px] mx-auto p-4 grid grid-cols-1 xl:grid-cols-12 gap-5">
+      <div class="xl:col-span-12 flex justify-between items-center bg-white p-3 rounded-lg shadow-sm border border-slate-200">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-slate-700">📌 ชื่อร้าน / สาขา:</span>
+          <input type="text" id="storeName" readonly class="bg-slate-100 border border-slate-300 rounded px-3 py-1 text-blue-700 font-bold cursor-not-allowed">
+        </div>
+        <button onclick="logout()" class="text-sm font-bold text-slate-500 hover:text-rose-500 transition">ออกจากระบบ</button>
+      </div>
+
+      <div class="xl:col-span-7 space-y-5">
+        <div class="bg-amber-100/70 border border-amber-300 rounded-xl p-4 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-4">
+            <div class="bg-white rounded-lg p-3 border border-amber-200">
+              <div class="font-bold text-slate-700 border-b pb-1 mb-2">ยอดขายตาม POS</div>
+              <div class="flex justify-between items-center mb-1"><span>เงินสด:</span><input type="number" id="posCash" oninput="calcFinancial()" class="w-28 text-right border rounded px-2 py-1"></div>
+              <div class="flex justify-between items-center mb-1"><span>เงินโอน:</span><input type="number" id="posTransfer" oninput="calcFinancial()" class="w-28 text-right border rounded px-2 py-1"></div>
+              <div class="flex justify-between items-center font-bold text-blue-700 border-t pt-2 mt-2"><span>รวม POS:</span><span id="posTotal">0</span></div>
+            </div>
+            <div class="bg-white rounded-lg p-3 border border-amber-200">
+              <div class="font-bold text-slate-700 border-b pb-1 mb-2">ยอดขายจริง</div>
+              <div class="flex justify-between items-center mb-1"><span>เงินสด:</span><input type="number" id="actCash" oninput="calcFinancial()" class="w-28 text-right border rounded px-2 py-1"></div>
+              <div class="flex justify-between items-center mb-1"><span>เงินโอน:</span><input type="number" id="actTransfer" oninput="calcFinancial()" class="w-28 text-right border rounded px-2 py-1"></div>
+              <div class="flex justify-between items-center mb-1"><span>ยอดปิดบัญชี:</span><input type="number" id="actClosing" oninput="calcFinancial()" class="w-28 text-right border rounded px-2 py-1"></div>
+              <div class="flex justify-between items-center mb-1"><span>รายจ่าย:</span><input type="number" id="actExpense" readonly class="w-28 text-right border rounded px-2 py-1 bg-gray-100 text-rose-600 font-semibold cursor-not-allowed"></div>
+              <div class="flex justify-between items-center font-bold text-emerald-700 border-t pt-2 mt-2"><span>รวมยอดขายจริง:</span><span id="actTotal">0</span></div>
+              <div class="flex justify-between items-center font-bold text-amber-800 border-t pt-2 mt-2"><span>*เงินขาด/เกิน:</span><span id="diffAmount">0</span></div>
+            </div>
+            <div class="bg-amber-50 rounded-lg p-3 border border-amber-300 shadow-sm">
+              <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+                <div class="flex items-center justify-between"><span class="text-slate-700">*เงินสด:</span><input type="number" id="sumCash" readonly class="w-20 text-right border rounded px-2 py-1 bg-gray-200"></div>
+                <div class="flex items-center justify-between"><span class="text-slate-700">*เงินโอน:</span><input type="number" id="sumTransfer" readonly class="w-20 text-right border rounded px-2 py-1 bg-gray-200"></div>
+                <div class="flex items-center justify-between"><span class="text-slate-700">*เงินฝาก:</span><input type="number" id="sumDeposit" class="w-20 text-right border rounded px-2 py-1 bg-white"></div>
+                <div class="flex items-center justify-between"><span class="text-slate-700">*เงินเศษ:</span><input type="number" id="sumChange" class="w-20 text-right border rounded px-2 py-1 bg-white"></div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white rounded-lg p-3 border border-amber-200 flex flex-col h-full">
+            <div class="font-bold text-slate-700 border-b pb-1 mb-2 flex justify-between items-center">
+              <span>📝 บันทึกรายจ่าย</span><span class="text-xs text-rose-500">รวม: <span id="expTotalDisplay">0</span></span>
+            </div>
+            <div class="overflow-y-auto flex-1 max-h-[500px]"><table class="w-full text-xs text-left"><tbody id="expenseTableBody" class="divide-y divide-slate-100"></tbody></table></div>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="bg-sky-700 text-white px-4 py-2 font-bold">📦 บันทึกการขาย และ สินค้าเข้า-ออก รายวัน</div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left min-w-[800px]">
+              <thead class="bg-sky-100 text-sky-900 font-bold text-center border-b">
+                <tr>
+                  <th class="p-1 border-r w-16" rowspan="2">ราคา</th>
+                  <th class="p-1 border-r bg-blue-50" colspan="2">ขาย</th>
+                  <th class="p-1 border-r bg-emerald-50" colspan="2">เข้า</th>
+                  <th class="p-1 border-r bg-amber-50" colspan="2">ออก</th>
+                  <th class="p-1 bg-slate-100" colspan="2">เพิ่มเติม (เข้า/ออก)</th>
+                </tr>
+                <tr class="text-[11px]">
+                  <th class="p-1 border-r w-14">จำนวน</th><th class="p-1 border-r w-20">มูลค่า</th>
+                  <th class="p-1 border-r w-16">ราคา</th><th class="p-1 border-r w-14">จำนวน</th>
+                  <th class="p-1 border-r w-16">ราคา</th><th class="p-1 border-r w-14">จำนวน</th>
+                  <th class="p-1 border-r w-32 text-slate-600">หมายเหตุ</th>
+                  <th class="p-1 w-20 text-slate-600">ผู้บันทึก</th>
+                </tr>
+              </thead>
+              <tbody id="stockInputTableBody" class="divide-y divide-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="xl:col-span-5 space-y-5">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="bg-pink-600 text-white px-4 py-1.5 font-bold text-center">🔄 ปรับราคาสินค้ารายวัน</div>
+          <div class="overflow-y-auto max-h-[300px]">
+            <table class="w-full text-xs text-center border-collapse">
+              <thead class="bg-pink-50 sticky top-0 text-pink-900 font-bold">
+                <tr>
+                  <th class="p-1.5 border-r">ราคาเดิม(ออก)</th>
+                  <th class="p-1.5 border-r w-14">จำนวน</th>
+                  <th class="p-1.5 border-r">ราคาใหม่(เข้า)</th>
+                  <th class="p-1.5 border-r w-14">จำนวน</th>
+                  <th class="p-1.5 border-r">หมายเหตุ</th>
+                  <th class="p-1.5">ผู้บันทึก</th>
+                </tr>
+              </thead>
+              <tbody id="priceAdjustBody" class="divide-y divide-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="bg-amber-500 text-white px-4 py-1.5 font-bold text-center">📊 สรุปสินค้าปรับราคาเข้า-ออก</div>
+          <table class="w-full text-xs text-center border-collapse"><thead class="bg-amber-50 font-bold"><tr><th class="p-2 border-r w-1/3">ราคา</th><th class="p-2 border-r w-1/3 text-emerald-700">เข้า</th><th class="p-2 w-1/3 text-rose-700">ออก</th></tr></thead><tbody id="adjustSummaryBody" class="divide-y divide-slate-200"></tbody></table>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="bg-purple-700 text-white px-4 py-1.5 font-bold text-center">📈 สรุปสินค้าเข้า-ออก รายวัน</div>
+          <table class="w-full text-xs text-center border-collapse"><thead class="bg-purple-100 text-purple-900 font-bold border-b border-purple-200"><tr><th class="p-2 border-r">ราคา</th><th class="p-2 border-r text-blue-800">ขาย</th><th class="p-2 border-r text-emerald-800">เข้า</th><th class="p-2 border-r text-amber-800">ออก</th><th class="p-2 bg-purple-200" colspan="2">สรุปทั้งหมด (รวมปรับราคา)</th></tr><tr class="bg-purple-50 text-[10px] text-slate-600"><th class="border-r"></th><th class="border-r"></th><th class="border-r"></th><th class="border-r"></th><th class="p-1 border-r">ยอดเข้าสุทธิ</th><th class="p-1">ยอดออกสุทธิ</th></tr></thead><tbody id="dailySummaryBody" class="divide-y divide-slate-200"></tbody></table>
+        </div>
+      </div>
+    </main>
+
+    <main id="pageSummary" class="max-w-[1600px] mx-auto p-4 hidden space-y-6">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-blue-500"><p class="text-slate-500 text-xs font-bold mb-1">ยอด POS รวม</p><p id="sumCardPOS" class="text-xl font-bold text-blue-700">0</p></div>
+        <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-emerald-500"><p class="text-slate-500 text-xs font-bold mb-1">ยอดขายจริงรวม</p><p id="sumCardAct" class="text-xl font-bold text-emerald-700">0</p></div>
+        <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-amber-500"><p class="text-slate-500 text-xs font-bold mb-1">เงิน ขาด/เกิน รวม</p><p id="sumCardDiff" class="text-xl font-bold text-amber-700">0</p></div>
+        <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-rose-500"><p class="text-slate-500 text-xs font-bold mb-1">รายจ่ายรวม</p><p id="sumCardExp" class="text-xl font-bold text-rose-600">0</p></div>
+        <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-indigo-500"><p class="text-slate-500 text-xs font-bold mb-1">เงินฝากสะสม</p><p id="sumCardDep" class="text-xl font-bold text-indigo-700">0</p></div>
+        <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-teal-500"><p class="text-slate-500 text-xs font-bold mb-1">ชิ้นขายสะสม</p><p id="sumCardPcs" class="text-xl font-bold text-teal-700">0 ชิ้น</p></div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-slate-800 text-white px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+          <div class="flex items-center gap-2"><span class="text-lg font-bold">📅 รายงานสรุปรายวัน (31 วัน)</span></div>
+          <div class="flex items-center gap-2">
+            <input type="text" id="filterDayInput" onkeyup="filterDailyTable()" placeholder="🔍 ค้นหาวันที่..." class="bg-slate-700 text-white placeholder-slate-400 border border-slate-600 rounded px-2 py-1 text-xs focus:outline-none">
+            <button onclick="forceRefreshMonthlySummary()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1 rounded text-xs">🔄 ดึงข้อมูลล่าสุด</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto max-h-[450px]">
+          <table class="w-full text-xs text-center border-collapse min-w-[950px]" id="table31Days">
+            <thead class="bg-slate-100 text-slate-700 font-bold sticky top-0 shadow-sm border-b">
+              <tr><th class="p-2.5 border-r w-16 bg-slate-200">วันที่</th><th class="p-2.5 border-r text-blue-800">ยอดขายตาม POS</th><th class="p-2.5 border-r text-emerald-800">ยอดขายจริง</th><th class="p-2.5 border-r">เงินขาด/เกิน</th><th class="p-2.5 border-r text-rose-700">รวมรายจ่าย</th><th class="p-2.5 border-r text-indigo-700">เงินฝาก</th><th class="p-2.5 border-r text-slate-700">เงินเศษ</th><th class="p-2.5 bg-teal-50 text-teal-800 font-bold">ชิ้นขายได้</th></tr>
+            </thead>
+            <tbody id="daily31TableBody" class="divide-y divide-slate-200"><tr><td colspan="8" class="p-6 text-slate-400">กำลังโหลดข้อมูล...</td></tr></tbody>
+            <tfoot class="bg-slate-200 font-bold sticky bottom-0 border-t-2 border-slate-300">
+              <tr><td class="p-2.5 border-r">รวม 31 วัน</td><td class="p-2.5 border-r text-blue-800" id="footPos">0</td><td class="p-2.5 border-r text-emerald-800" id="footAct">0</td><td class="p-2.5 border-r" id="footDiff">0</td><td class="p-2.5 border-r text-rose-700" id="footExp">0</td><td class="p-2.5 border-r text-indigo-700" id="footDep">0</td><td class="p-2.5 border-r text-slate-700" id="footChg">0</td><td class="p-2.5 bg-teal-100 text-teal-900" id="footPcs">0</td></tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-indigo-700 flex justify-between items-center px-4 py-3">
+          <h2 class="text-white font-bold text-base md:text-lg">📦 สรุปสินค้าคงคลังประจำเดือน</h2>
+          <button onclick="saveInitStock()" class="bg-yellow-400 hover:bg-yellow-500 text-indigo-900 font-bold px-4 py-1.5 rounded shadow text-xs md:text-sm">💾 บันทึกสินค้าต้นงวด</button>
+        </div>
+        <div class="overflow-x-auto p-4">
+          <table class="w-full text-xs md:text-sm text-center border-collapse min-w-[800px]">
+            <thead><tr class="bg-slate-100 text-slate-700 border-b-2 border-slate-300"><th class="p-2 border-r w-20 md:w-24">ราคา</th><th class="p-2 border-r w-28 md:w-32 bg-yellow-50">ต้นงวด ✎</th><th class="p-2 border-r text-emerald-700">เข้า</th><th class="p-2 border-r text-amber-700">ออก</th><th class="p-2 border-r text-blue-700">ขายแล้ว</th><th class="p-2 border-r bg-indigo-50 font-bold text-indigo-800">คงเหลือจริง</th><th class="p-2 bg-indigo-100 font-bold text-indigo-900">มูลค่าคงเหลือ</th></tr></thead>
+            <tbody id="inventoryTableBody" class="divide-y divide-slate-200"></tbody>
+            <tfoot><tr class="bg-indigo-700 text-white font-bold text-sm md:text-base border-t-2 border-indigo-900"><td colspan="6" class="p-3 text-right">ยอดรวมมูลค่าสินค้าคงคลังทั้งหมด:</td><td class="p-3 text-center tracking-wide" id="grandTotalValue">฿ 0</td></tr></tfoot>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- 📈 MAIN PAGE: YEARLY SUMMARY -->
+    <main id="pageYearly" class="max-w-[1600px] mx-auto p-4 hidden space-y-6">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-emerald-700 text-white px-4 py-4 flex flex-wrap justify-between items-center gap-3">
+          <div class="flex items-center gap-2"><span class="text-xl font-bold">📈 รายงานสรุปภาพรวมรายปี (จาก History)</span></div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold">ดูข้อมูลของปี:</span>
+            <select id="selectYearlyTab" onchange="loadYearlySummary()" class="bg-white text-emerald-900 font-bold rounded px-3 py-1.5 text-base focus:outline-none">
+              <script>for(let y=2568; y<=2572; y++) document.write(`<option value="${y}" ${y===2569?'selected':''}>${y}</option>`);</script>
+            </select>
+            <button onclick="loadYearlySummary()" class="bg-emerald-900 hover:bg-emerald-800 text-white font-bold px-4 py-1.5 rounded shadow text-sm transition">🔄 อัปเดต</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto p-4">
+           <table class="w-full text-sm text-center border-collapse min-w-[950px]">
+             <thead class="bg-emerald-50 text-emerald-900 font-bold border-b-2 border-emerald-300">
+               <tr>
+                 <th class="p-3 border-r bg-emerald-100">เดือน</th>
+                 <th class="p-3 border-r text-blue-800">ยอด POS รวม</th>
+                 <th class="p-3 border-r text-emerald-800">ยอดขายจริงรวม</th>
+                 <th class="p-3 border-r">เงินขาด/เกิน</th>
+                 <th class="p-3 border-r text-rose-700">รายจ่ายรวม</th>
+                 <th class="p-3 border-r text-indigo-700">เงินฝากสะสม</th>
+                 <th class="p-3 border-r text-slate-700">เงินเศษ</th>
+                 <th class="p-3 bg-teal-50 text-teal-800 font-bold">ชิ้นขายสะสม</th>
+               </tr>
+             </thead>
+             <tbody id="yearlyTableBody" class="divide-y divide-slate-200">
+                <tr><td colspan="8" class="p-8 text-slate-500">กรุณากดอัปเดตเพื่อดูข้อมูล...</td></tr>
+             </tbody>
+             <tfoot class="bg-emerald-100 font-bold border-t-2 border-emerald-400" id="yearlyTableFoot">
+               <tr>
+                 <td class="p-3 border-r text-emerald-900">รวมทั้งปี</td>
+                 <td class="p-3 border-r text-blue-800" id="yearFootPos">0</td>
+                 <td class="p-3 border-r text-emerald-800" id="yearFootAct">0</td>
+                 <td class="p-3 border-r" id="yearFootDiff">0</td>
+                 <td class="p-3 border-r text-rose-700" id="yearFootExp">0</td>
+                 <td class="p-3 border-r text-indigo-700" id="yearFootDep">0</td>
+                 <td class="p-3 border-r text-slate-700" id="yearFootChg">0</td>
+                 <td class="p-3 bg-teal-100 text-teal-900" id="yearFootPcs">0</td>
+               </tr>
+             </tfoot>
+           </table>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    // 🔴 นี่คือลิงก์ API ของคุณ ผมใส่ให้เรียบร้อยแล้วครับ! ไม่ต้องแก้แล้ว
+    const API_URL = "https://script.google.com/macros/s/AKfycbxRt2d0TkC5YtYcQB97gt3CHtXwzgOl587euuioGHDLm6VmcjOBODTCYH72Swv6Fxkg9Q/exec";
+
+    let currentPin = "";
+    const priceTiers = ['100','120','150','180','200','250','300','350','400','79','59','50','39','35','25','20','1แถม1','3ตัว100'];
+    function getSkuPrice(sku) { if(sku==='1แถม1')return 50; if(sku==='3ตัว100')return 100; return parseFloat(sku)||0; }
+
+    // 🟢 ฟังก์ชันแกนหลักที่ใช้คุยกับ Google Apps Script (Fetch API)
+    async function apiCall(action, data = {}) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: action, data: data })
+        });
+        return await response.json();
+      } catch (error) {
+        console.error("API Error:", error);
+        throw error;
+      }
+    }
+
+    document.getElementById('pinInput').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    async function handleLogin() {
+      const pin = document.getElementById('pinInput').value.trim();
+      const btn = document.getElementById('loginBtn');
+      const err = document.getElementById('loginError');
+      if (!pin) return;
+      btn.innerHTML = '⏳ กำลังตรวจสอบ...'; btn.disabled = true;
+      
+      try {
+        const res = await apiCall('verifyLogin', { pin: pin });
+        if (res.success) {
+          currentPin = pin;
+          document.getElementById('loginScreen').classList.add('hidden');
+          
+          if (res.role === 'admin') {
+            document.getElementById('adminContainer').classList.remove('hidden');
+            document.getElementById('admDay').value = new Date().getDate();
+          } else {
+            document.getElementById('appContainer').classList.remove('hidden');
+            document.getElementById('storeName').value = res.name;
+            buildTables();
+            document.getElementById('selectDay').dispatchEvent(new Event('change'));
+          }
+        } else {
+          err.innerText = res.message; err.classList.remove('hidden');
+          btn.innerHTML = '🔓 เข้าสู่ระบบ'; btn.disabled = false;
+        }
+      } catch (error) {
+        err.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์"; err.classList.remove('hidden');
+        btn.innerHTML = '🔓 เข้าสู่ระบบ'; btn.disabled = false;
+      }
+    }
+
+    function logout() {
+      currentPin = "";
+      document.getElementById('pinInput').value = "";
+      document.getElementById('loginError').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('appContainer').classList.add('hidden');
+      switchTab('daily');
+    }
+
+    function logoutAdmin() {
+      currentPin = "";
+      document.getElementById('pinInput').value = "";
+      document.getElementById('loginError').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('adminContainer').classList.add('hidden');
+      document.getElementById('adminTableBody').innerHTML = '<tr><td colspan="7" class="p-10 text-slate-500 text-lg">กรุณากดปุ่ม "ดึงข้อมูล" เพื่อดูยอดขายรายวันของทุกสาขา</td></tr>';
+      document.getElementById('admTotPos').innerText = "0"; document.getElementById('admTotAct').innerText = "0"; document.getElementById('admTotDiff').innerText = "0"; document.getElementById('admTotExp').innerText = "0"; document.getElementById('admTotDep').innerText = "0";
+    }
+
+    async function fetchAdminData() {
+       const btn = document.getElementById('btnFetchAdmin');
+       const txt = document.getElementById('admBtnTxt');
+       const tbody = document.getElementById('adminTableBody');
+       const status = document.getElementById('admStatus');
+       
+       const d = document.getElementById('admDay').value;
+       const m = document.getElementById('admMonth').value;
+       const y = document.getElementById('admYear').value;
+       
+       btn.disabled = true; btn.classList.add('opacity-70');
+       txt.innerText = "⏳ กำลังดึงข้อมูล...";
+       status.innerText = "⏳ ระบบกำลังทยอยดึงข้อมูลจาก 29 สาขา (อาจใช้เวลาประมาณ 10-15 วินาที)...";
+       tbody.innerHTML = '<tr><td colspan="7" class="p-10"><div class="flex flex-col items-center justify-center gap-3 text-indigo-600 font-bold animate-pulse text-lg"><span class="text-3xl">📡</span>กำลังเชื่อมต่อฐานข้อมูลทุกสาขา กรุณารอสักครู่...</div></td></tr>';
+       
+       try {
+         const res = await apiCall('getAdminDailySummary', { d: d, m: m, y: y });
+         btn.disabled = false; btn.classList.remove('opacity-70'); txt.innerText = "🔄 ดึงข้อมูล";
+         status.innerText = `✅ ดึงข้อมูลสำเร็จ! ข้อมูลล่าสุดเวลา ${new Date().toLocaleTimeString('th-TH')}`;
+         
+         if(res.success) {
+            document.getElementById('admTotPos').innerText = "฿ " + res.summary.pos.toLocaleString();
+            document.getElementById('admTotAct').innerText = "฿ " + res.summary.act.toLocaleString();
+            document.getElementById('admTotDiff').innerText = "฿ " + res.summary.diff.toLocaleString();
+            document.getElementById('admTotDiff').className = res.summary.diff < 0 ? "text-xl font-bold text-rose-600" : "text-xl font-bold text-emerald-600";
+            document.getElementById('admTotExp').innerText = "฿ " + res.summary.exp.toLocaleString();
+            document.getElementById('admTotDep').innerText = "฿ " + res.summary.dep.toLocaleString();
+            
+            let html = '';
+            res.data.forEach(b => {
+               html += `<tr class="${b.hasData?'hover:bg-indigo-50 bg-white':'bg-slate-50 opacity-60'} border-b">
+                 <td class="p-3 border-r text-left font-bold text-indigo-900">${b.name}</td>
+                 <td class="p-3 border-r font-semibold text-blue-700">${b.hasData ? b.pos.toLocaleString() : '-'}</td>
+                 <td class="p-3 border-r font-semibold text-emerald-700">${b.hasData ? b.act.toLocaleString() : '-'}</td>
+                 <td class="p-3 border-r font-bold ${b.diff<0?'text-rose-600':'text-emerald-600'}">${b.hasData ? b.diff.toLocaleString() : '-'}</td>
+                 <td class="p-3 border-r font-semibold text-rose-600">${b.hasData ? b.exp.toLocaleString() : '-'}</td>
+                 <td class="p-3 border-r font-semibold text-indigo-700">${b.hasData ? b.dep.toLocaleString() : '-'}</td>
+                 <td class="p-3 text-xs font-semibold ${!b.hasData?'text-amber-500':'text-emerald-500'}">${b.note || '✅ บันทึกแล้ว'}</td>
+               </tr>`;
+            });
+            tbody.innerHTML = html;
+         }
+       } catch(e) {
+         btn.disabled = false; btn.classList.remove('opacity-70'); txt.innerText = "🔄 ดึงข้อมูล";
+         status.innerText = "❌ เกิดข้อผิดพลาดในการดึงข้อมูล";
+         tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-rose-500 font-bold">Error: ${e.message}</td></tr>`;
+       }
+    }
+
+    function buildTables() {
+      let inputRows = '';
+      priceTiers.forEach((p, index) => {
+        inputRows += `<tr class="hover:bg-slate-50 text-center">
+          <td class="p-1 border-r font-bold text-slate-700 bg-slate-50">${p}</td>
+          <td class="p-1 border-r bg-blue-50/20"><input type="number" id="sell_qty_${index}" oninput="updateSummary()" class="w-full text-center border rounded px-1 py-0.5"></td>
+          <td class="p-1 border-r font-semibold text-blue-700 bg-blue-50/20"><span id="sell_total_${index}">0</span></td>
+          <td class="p-1 border-r bg-emerald-50/20"><input type="text" list="skuList" id="in_sku_${index}" class="w-full text-center border rounded px-1 py-0.5 text-[11px]"></td>
+          <td class="p-1 border-r bg-emerald-50/20"><input type="number" id="in_qty_${index}" oninput="updateSummary()" class="w-full text-center border rounded px-1 py-0.5"></td>
+          <td class="p-1 border-r bg-amber-50/20"><input type="text" list="skuList" id="out_sku_${index}" class="w-full text-center border rounded px-1 py-0.5 text-[11px]"></td>
+          <td class="p-1 border-r bg-amber-50/20"><input type="number" id="out_qty_${index}" oninput="updateSummary()" class="w-full text-center border rounded px-1 py-0.5"></td>
+          <td class="p-1 border-r"><input type="text" id="stock_note_${index}" class="w-full text-left border rounded px-1 py-0.5 text-[11px]"></td>
+          <td class="p-1"><input type="text" id="stock_staff_${index}" class="w-full text-center border rounded px-1 py-0.5 text-[11px]"></td>
+        </tr>`;
+      });
+      document.getElementById('stockInputTableBody').innerHTML = inputRows;
+
+      let expRows = ''; for(let i=1; i<=15; i++) expRows += `<tr><td class="p-1 pr-2"><input type="text" id="exp_desc_${i}" class="w-full border rounded px-2 py-1"></td><td class="p-1"><input type="number" id="exp_val_${i}" oninput="calcFinancial()" class="w-full text-right border rounded px-2 py-1"></td></tr>`;
+      document.getElementById('expenseTableBody').innerHTML = expRows;
+
+      let adjRows = ''; for(let i=0; i<15; i++) adjRows += `<tr><td class="p-1 border-r"><input type="text" list="skuList" id="adj_old_sku_${i}" onchange="updateAdjustSummary()" class="w-full text-center border rounded px-1"></td><td class="p-1 border-r"><input type="number" id="adj_old_qty_${i}" oninput="updateAdjustSummary()" class="w-full text-center border rounded px-1"></td><td class="p-1 border-r"><input type="text" list="skuList" id="adj_new_sku_${i}" onchange="updateAdjustSummary()" class="w-full text-center border rounded px-1"></td><td class="p-1 border-r"><input type="number" id="adj_new_qty_${i}" oninput="updateAdjustSummary()" class="w-full text-center border rounded px-1"></td><td class="p-1 border-r"><input type="text" id="adj_note_${i}" class="w-full border rounded px-1"></td><td class="p-1"><input type="text" id="adj_staff_${i}" class="w-full border rounded px-1"></td></tr>`;
+      document.getElementById('priceAdjustBody').innerHTML = adjRows;
+    }
+
+    function switchTab(tab) {
+      const pD = document.getElementById('pageDaily'), pS = document.getElementById('pageSummary'), pY = document.getElementById('pageYearly');
+      const bD = document.getElementById('tabBtnDaily'), bS = document.getElementById('tabBtnSummary'), bY = document.getElementById('tabBtnYearly');
+      const dC = document.getElementById('dailyControls');
+      
+      const activeClass = "tab-active px-6 py-2.5 rounded-t-lg font-bold text-base transition-colors duration-200 whitespace-nowrap";
+      const inactiveClass = "tab-inactive hover:bg-blue-700 px-6 py-2.5 rounded-t-lg font-bold text-base transition-colors duration-200 whitespace-nowrap";
+
+      pD.classList.add('hidden'); pS.classList.add('hidden'); pY.classList.add('hidden');
+      bD.className = inactiveClass; bS.className = inactiveClass; bY.className = inactiveClass;
+      dC.classList.add('hidden');
+
+      if (tab === 'daily') {
+        pD.classList.remove('hidden'); dC.classList.remove('hidden');
+        bD.className = activeClass;
+      } else if (tab === 'summary') {
+        pS.classList.remove('hidden');
+        bS.className = activeClass;
+        loadMonthlySummary(); 
+      } else if (tab === 'yearly') {
+        pY.classList.remove('hidden');
+        bY.className = activeClass;
+        loadYearlySummary();
+      }
+    }
+
+    function calcFinancial() {
+      const pC = parseFloat(document.getElementById('posCash').value)||0, pT = parseFloat(document.getElementById('posTransfer').value)||0, pTot = pC+pT;
+      document.getElementById('posTotal').innerText = pTot.toLocaleString();
+      let eTot = 0; for(let i=1; i<=15; i++) eTot += parseFloat(document.getElementById(`exp_val_${i}`).value)||0;
+      document.getElementById('expTotalDisplay').innerText = eTot.toLocaleString(); document.getElementById('actExpense').value = eTot;
+      const aC = parseFloat(document.getElementById('actCash').value)||0, aT = parseFloat(document.getElementById('actTransfer').value)||0, aCl = parseFloat(document.getElementById('actClosing').value)||0;
+      const aTot = aC+aT+aCl+eTot; document.getElementById('actTotal').innerText = aTot.toLocaleString();
+      const diff = aTot-pTot; const dEl = document.getElementById('diffAmount'); dEl.innerText = diff.toLocaleString(); dEl.className = diff<0 ? "text-base font-bold text-rose-600" : "text-base font-bold text-emerald-600";
+      document.getElementById('sumCash').value = (aC+eTot)-pC; document.getElementById('sumTransfer').value = (aT+aCl)-pT;
+    }
+
+    function updateAdjustSummary() {
+      let iMap = {}, oMap = {}; priceTiers.forEach(p => { iMap[p]=0; oMap[p]=0; });
+      for(let i=0; i<15; i++) {
+        let oS=document.getElementById(`adj_old_sku_${i}`).value.trim(), oQ=parseFloat(document.getElementById(`adj_old_qty_${i}`).value)||0;
+        let nS=document.getElementById(`adj_new_sku_${i}`).value.trim(), nQ=parseFloat(document.getElementById(`adj_new_qty_${i}`).value)||0;
+        if(oS&&oMap[oS]!==undefined) oMap[oS]+=oQ; if(nS&&iMap[nS]!==undefined) iMap[nS]+=nQ;
+      }
+      let html = ''; priceTiers.forEach(p => { html += `<tr class="text-center hover:bg-slate-50"><td class="p-1.5 border-r font-bold bg-slate-50">${p}</td><td class="p-1.5 border-r text-emerald-600" id="adj_sum_in_${p}">${iMap[p]}</td><td class="p-1.5 text-rose-600" id="adj_sum_out_${p}">${oMap[p]}</td></tr>`; });
+      document.getElementById('adjustSummaryBody').innerHTML = html; updateSummary(); 
+    }
+
+    function updateSummary() {
+      let sMap={}, iMap={}, oMap={}; priceTiers.forEach(p => { sMap[p]=0; iMap[p]=0; oMap[p]=0; });
+      priceTiers.forEach((p, i) => {
+        let sq=parseFloat(document.getElementById(`sell_qty_${i}`).value)||0; document.getElementById(`sell_total_${i}`).innerText = (sq*getSkuPrice(p)).toLocaleString(); sMap[p]+=sq;
+        let is=document.getElementById(`in_sku_${i}`).value.trim(), iq=parseFloat(document.getElementById(`in_qty_${i}`).value)||0; if(is&&iMap[is]!==undefined) iMap[is]+=iq;
+        let os=document.getElementById(`out_sku_${i}`).value.trim(), oq=parseFloat(document.getElementById(`out_qty_${i}`).value)||0; if(os&&oMap[os]!==undefined) oMap[os]+=oq;
+      });
+      let html = ''; priceTiers.forEach(p => {
+        let tIn = iMap[p]+(parseFloat(document.getElementById(`adj_sum_in_${p}`)?.innerText)||0);
+        let calculatedSell = (p === '3ตัว100') ? (sMap[p] * 3) : sMap[p];
+        let tOut = calculatedSell + oMap[p] + (parseFloat(document.getElementById(`adj_sum_out_${p}`)?.innerText)||0);
+        html += `<tr class="hover:bg-slate-50"><td class="p-1.5 border-r font-bold bg-slate-50">${p}</td><td class="p-1.5 border-r text-blue-700">${sMap[p]}</td><td class="p-1.5 border-r text-emerald-700">${iMap[p]}</td><td class="p-1.5 border-r text-amber-700">${oMap[p]}</td><td class="p-1.5 border-r font-bold text-emerald-800 bg-emerald-50/50">${tIn}</td><td class="p-1.5 font-bold text-rose-800 bg-rose-50/50">${tOut}</td></tr>`;
+      });
+      document.getElementById('dailySummaryBody').innerHTML = html;
+    }
+
+    function clearForm() { document.querySelectorAll('#pageDaily input:not([readonly]):not(#storeName)').forEach(i => i.value = ''); calcFinancial(); updateAdjustSummary(); }
+
+    document.getElementById('selectDay').addEventListener('change', async function() {
+      clearForm(); 
+      const day = this.value;
+      const month = document.getElementById('selectMonth').value;
+      const year = document.getElementById('selectYear').value;
+      
+      try {
+        const res = await apiCall('getDailyData', {pin: currentPin, day: day, month: month, year: year});
+        if(res.success && res.exists) {
+          const d = res.data;
+          if(d.fin) { document.getElementById('posCash').value=d.fin.posCash||''; document.getElementById('posTransfer').value=d.fin.posTransfer||''; document.getElementById('actCash').value=d.fin.actCash||''; document.getElementById('actTransfer').value=d.fin.actTransfer||''; document.getElementById('actClosing').value=d.fin.actClosing||''; document.getElementById('sumDeposit').value=d.fin.sumDeposit||''; document.getElementById('sumChange').value=d.fin.sumChange||''; }
+          if(d.expenses) d.expenses.forEach((e,i)=>{document.getElementById(`exp_desc_${i+1}`).value=e.desc||''; document.getElementById(`exp_val_${i+1}`).value=e.val||'';});
+          
+          if(d.stocks) d.stocks.forEach((s,i)=>{document.getElementById(`sell_qty_${i}`).value=s.sellQty||''; document.getElementById(`in_sku_${i}`).value=s.inSku||''; document.getElementById(`in_qty_${i}`).value=s.inQty||''; document.getElementById(`out_sku_${i}`).value=s.outSku||''; document.getElementById(`out_qty_${i}`).value=s.outQty||''; document.getElementById(`stock_note_${i}`).value=s.note||''; document.getElementById(`stock_staff_${i}`).value=s.staff||''; });
+          if(d.adjusts) d.adjusts.forEach((a,i)=>{document.getElementById(`adj_old_sku_${i}`).value=a.oldPrice||''; document.getElementById(`adj_old_qty_${i}`).value=a.oldQty||''; document.getElementById(`adj_new_sku_${i}`).value=a.newPrice||''; document.getElementById(`adj_new_qty_${i}`).value=a.newQty||''; document.getElementById(`adj_note_${i}`).value=a.note||''; document.getElementById(`adj_staff_${i}`).value=a.staff||''; });
+          
+          calcFinancial(); updateAdjustSummary();
+        }
+      } catch (e) {
+        console.error("Failed to load daily data", e);
+      }
+    });
+
+    async function requestClearData() {
+      const m = document.getElementById('selectMonth').value;
+      const y = document.getElementById('selectYear').value;
+      const resetPin = prompt(`⚠ คำเตือน: ระบบจะทำการสรุปยอดของเดือน "${m} ${y}" ไปเก็บไว้ในประวัติ (History)\nจากนั้นจะล้างข้อมูลทั้ง 31 วันของ ${document.getElementById('storeName').value}\n\nกรุณาใส่รหัสผ่านสำหรับล้างข้อมูล:`);
+      
+      if (!resetPin) return; 
+
+      try {
+        const res = await apiCall('clearAllMonthData', {pin: currentPin, resetPin: resetPin, month: m, year: y});
+        alert(res.message);
+        if (res.success) {
+          document.getElementById('selectDay').value = "1";
+          document.getElementById('selectDay').dispatchEvent(new Event('change'));
+          if (!document.getElementById('pageYearly').classList.contains('hidden')) {
+              loadYearlySummary();
+          }
+        }
+      } catch (e) {
+        alert("เกิดข้อผิดพลาด: " + e.message);
+      }
+    }
+
+    async function saveData() {
+      const payload = {
+        pin: currentPin, day: document.getElementById('selectDay').value, month: document.getElementById('selectMonth').value, year: document.getElementById('selectYear').value,
+        fin: { posCash:parseFloat(document.getElementById('posCash').value)||0, posTransfer:parseFloat(document.getElementById('posTransfer').value)||0, actCash:parseFloat(document.getElementById('actCash').value)||0, actTransfer:parseFloat(document.getElementById('actTransfer').value)||0, actClosing:parseFloat(document.getElementById('actClosing').value)||0, expenseTotal:parseFloat(document.getElementById('actExpense').value)||0, sumCash:parseFloat(document.getElementById('sumCash').value)||0, sumTransfer:parseFloat(document.getElementById('sumTransfer').value)||0, sumDeposit:parseFloat(document.getElementById('sumDeposit').value)||0, sumChange:parseFloat(document.getElementById('sumChange').value)||0 },
+        expenses: [], stocks: [], adjusts: []
+      };
+      for(let i=1; i<=15; i++) { let d=document.getElementById(`exp_desc_${i}`).value.trim(), v=parseFloat(document.getElementById(`exp_val_${i}`).value)||0; if(d||v>0) payload.expenses.push({desc:d, val:v}); }
+      
+      priceTiers.forEach((p,i) => payload.stocks.push({ skuPrice:p, sellQty:parseFloat(document.getElementById(`sell_qty_${i}`).value)||0, inSku:document.getElementById(`in_sku_${i}`).value.trim(), inQty:parseFloat(document.getElementById(`in_qty_${i}`).value)||0, outSku:document.getElementById(`out_sku_${i}`).value.trim(), outQty:parseFloat(document.getElementById(`out_qty_${i}`).value)||0, note:document.getElementById(`stock_note_${i}`).value.trim(), staff:document.getElementById(`stock_staff_${i}`).value.trim() }));
+      
+      for(let i=0; i<15; i++) payload.adjusts.push({ oldPrice:document.getElementById(`adj_old_sku_${i}`).value.trim(), oldQty:parseFloat(document.getElementById(`adj_old_qty_${i}`).value)||0, newPrice:document.getElementById(`adj_new_sku_${i}`).value.trim(), newQty:parseFloat(document.getElementById(`adj_new_qty_${i}`).value)||0, note:document.getElementById(`adj_note_${i}`).value.trim(), staff:document.getElementById(`adj_staff_${i}`).value.trim() });
+      
+      try {
+        const res = await apiCall('saveDailyData', {payload: payload});
+        alert(res.message);
+        loadMonthlySummary(); // โหลดสรุปใหม่หลังจากบันทึกเสร็จ
+      } catch (e) {
+        alert("บันทึกไม่สำเร็จ: " + e.message);
+      }
+    }
+
+    function forceRefreshMonthlySummary() {
+      loadMonthlySummary(true);
+    }
+
+    async function loadMonthlySummary(force = false) {
+      document.getElementById('daily31TableBody').innerHTML = '<tr><td colspan="8" class="p-8 text-slate-500 animate-pulse">กำลังโหลดข้อมูล...</td></tr>';
+      document.getElementById('inventoryTableBody').innerHTML = '<tr><td colspan="7" class="p-6 text-slate-500 animate-pulse">กำลังโหลด...</td></tr>';
+      
+      try {
+        const res = await apiCall('getMonthlySummary', {pin: currentPin, forceRefresh: force});
+        if(res.success) {
+          const d = res.data;
+          document.getElementById('sumCardPOS').innerText = '฿ ' + d.fin.posTotal.toLocaleString(); document.getElementById('sumCardAct').innerText = '฿ ' + d.fin.actTotal.toLocaleString();
+          document.getElementById('sumCardDiff').innerText = '฿ ' + d.fin.diffTotal.toLocaleString(); document.getElementById('sumCardDiff').className = d.fin.diffTotal < 0 ? "text-xl font-bold text-rose-600" : "text-xl font-bold text-emerald-600";
+          document.getElementById('sumCardExp').innerText = '฿ ' + d.fin.expense.toLocaleString(); document.getElementById('sumCardDep').innerText = '฿ ' + d.fin.deposit.toLocaleString(); document.getElementById('sumCardPcs').innerText = d.fin.totalPcsSold.toLocaleString() + ' ชิ้น';
+          let dH=''; d.dailyRows.forEach(r => { dH += `<tr class="${r.hasData?'hover:bg-blue-50/50':'opacity-40 hover:bg-slate-50'} border-b"><td class="p-2 border-r bg-slate-50 font-bold">วันที่ ${r.day}</td><td class="p-2 border-r text-blue-700">${r.posTotal.toLocaleString()}</td><td class="p-2 border-r text-emerald-700">${r.actTotal.toLocaleString()}</td><td class="p-2 border-r ${r.diff<0?'text-rose-600 font-bold':'text-emerald-600'}">${r.diff.toLocaleString()}</td><td class="p-2 border-r text-rose-600">${r.expense.toLocaleString()}</td><td class="p-2 border-r text-indigo-700">${r.deposit.toLocaleString()}</td><td class="p-2 border-r">${r.change.toLocaleString()}</td><td class="p-2 bg-teal-50/50 font-bold text-teal-800">${r.pcsSold.toLocaleString()}</td></tr>`; });
+          document.getElementById('daily31TableBody').innerHTML = dH;
+          document.getElementById('footPos').innerText = d.fin.posTotal.toLocaleString(); document.getElementById('footAct').innerText = d.fin.actTotal.toLocaleString(); document.getElementById('footDiff').innerText = d.fin.diffTotal.toLocaleString(); document.getElementById('footDiff').className = d.fin.diffTotal < 0 ? "p-2.5 border-r text-rose-600" : "p-2.5 border-r text-emerald-700"; document.getElementById('footExp').innerText = d.fin.expense.toLocaleString(); document.getElementById('footDep').innerText = d.fin.deposit.toLocaleString(); document.getElementById('footChg').innerText = d.fin.change.toLocaleString(); document.getElementById('footPcs').innerText = d.fin.totalPcsSold.toLocaleString() + ' ชิ้น';
+          
+          let iH=''; let gT=0;
+          priceTiers.forEach(p => {
+            let s=d.stocks[p]||{begin:0,inQty:0,outQty:0,sellQty:0}, eQ=s.begin+s.inQty-s.outQty-s.sellQty, eV=eQ*getSkuPrice(p); gT+=eV;
+            iH += `<tr class="border-b"><td class="p-2 border-r font-bold">${p}</td><td class="p-1 border-r bg-yellow-50"><input type="number" id="init_qty_${p}" value="${s.begin}" oninput="calcEndStock()" class="w-full text-center border border-yellow-300 rounded focus:ring-2"></td><td class="p-2 border-r text-emerald-600 font-semibold" id="sum_in_${p}">${s.inQty}</td><td class="p-2 border-r text-amber-600 font-semibold" id="sum_out_${p}">${s.outQty}</td><td class="p-2 border-r text-blue-600 font-semibold" id="sum_sell_${p}">${s.sellQty}</td><td class="p-2 border-r bg-indigo-50 font-bold text-indigo-700" id="end_qty_${p}">${eQ}</td><td class="p-2 bg-indigo-100 font-bold text-indigo-900" id="end_val_${p}">${eV.toLocaleString()}</td></tr>`;
+          });
+          document.getElementById('inventoryTableBody').innerHTML = iH; document.getElementById('grandTotalValue').innerText = '฿ ' + gT.toLocaleString();
+        }
+      } catch (e) {
+        console.error("Error loading monthly summary", e);
+      }
+    }
+
+    async function loadYearlySummary() {
+      const year = document.getElementById('selectYearlyTab').value;
+      const tBody = document.getElementById('yearlyTableBody');
+      tBody.innerHTML = '<tr><td colspan="8" class="p-8 text-slate-500 animate-pulse font-bold text-lg">กำลังโหลดข้อมูลประวัติปี '+year+'...</td></tr>';
+      
+      try {
+        const res = await apiCall('getYearlySummary', {pin: currentPin, year: year});
+        if(res.success && res.hasData) {
+          let html = '';
+          let tPos=0, tAct=0, tDiff=0, tExp=0, tDep=0, tChg=0, tPcs=0;
+          
+          res.data.forEach(r => {
+            html += `<tr class="hover:bg-emerald-50 border-b">
+              <td class="p-3 border-r bg-slate-50 font-bold text-emerald-800">${r.month}</td>
+              <td class="p-3 border-r text-blue-700 font-semibold">${r.pos.toLocaleString()}</td>
+              <td class="p-3 border-r text-emerald-700 font-semibold">${r.act.toLocaleString()}</td>
+              <td class="p-3 border-r ${r.diff<0?'text-rose-600 font-bold':'text-emerald-600 font-semibold'}">${r.diff.toLocaleString()}</td>
+              <td class="p-3 border-r text-rose-600 font-semibold">${r.exp.toLocaleString()}</td>
+              <td class="p-3 border-r text-indigo-700 font-semibold">${r.dep.toLocaleString()}</td>
+              <td class="p-3 border-r text-slate-600">${r.chg.toLocaleString()}</td>
+              <td class="p-3 bg-teal-50/50 font-bold text-teal-800">${r.pcs.toLocaleString()}</td>
+            </tr>`;
+            tPos+=r.pos; tAct+=r.act; tDiff+=r.diff; tExp+=r.exp; tDep+=r.dep; tChg+=r.chg; tPcs+=r.pcs;
+          });
+          
+          tBody.innerHTML = html;
+          document.getElementById('yearFootPos').innerText = tPos.toLocaleString();
+          document.getElementById('yearFootAct').innerText = tAct.toLocaleString();
+          document.getElementById('yearFootDiff').innerText = tDiff.toLocaleString();
+          document.getElementById('yearFootDiff').className = tDiff<0 ? "p-3 border-r text-rose-600" : "p-3 border-r text-emerald-700";
+          document.getElementById('yearFootExp').innerText = tExp.toLocaleString();
+          document.getElementById('yearFootDep').innerText = tDep.toLocaleString();
+          document.getElementById('yearFootChg').innerText = tChg.toLocaleString();
+          document.getElementById('yearFootPcs').innerText = tPcs.toLocaleString() + ' ชิ้น';
+        } else {
+          tBody.innerHTML = `<tr><td colspan="8" class="p-8 text-rose-500 font-bold">ไม่มีข้อมูลสรุปรายเดือนในปี ${year} ที่ถูกบันทึกไว้ในประวัติ</td></tr>`;
+          document.getElementById('yearFootPos').innerText = "0"; document.getElementById('yearFootAct').innerText = "0"; document.getElementById('yearFootDiff').innerText = "0";
+          document.getElementById('yearFootExp').innerText = "0"; document.getElementById('yearFootDep').innerText = "0"; document.getElementById('yearFootChg').innerText = "0"; document.getElementById('yearFootPcs').innerText = "0";
+        }
+      } catch (e) {
+        tBody.innerHTML = `<tr><td colspan="8" class="p-8 text-rose-500 font-bold">Error: ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้</td></tr>`;
+      }
+    }
+
+    function filterDailyTable() { const q = document.getElementById('filterDayInput').value.trim().toLowerCase(); document.querySelectorAll('#daily31TableBody tr').forEach(r => r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none'); }
+    function calcEndStock() { let gT=0; priceTiers.forEach(sku => { let b=parseFloat(document.getElementById(`init_qty_${sku}`)?.value)||0, iQ=parseFloat(document.getElementById(`sum_in_${sku}`)?.innerText)||0, oQ=parseFloat(document.getElementById(`sum_out_${sku}`)?.innerText)||0, sQ=parseFloat(document.getElementById(`sum_sell_${sku}`)?.innerText)||0, eQ=b+iQ-oQ-sQ, eV=eQ*getSkuPrice(sku); gT+=eV; let eEl=document.getElementById(`end_qty_${sku}`); if(eEl){eEl.innerText=eQ; eEl.className=eQ<0?"p-2 border-r font-bold text-rose-600 bg-rose-50":"p-2 border-r bg-indigo-50 font-bold text-indigo-700";} let vEl=document.getElementById(`end_val_${sku}`); if(vEl){vEl.innerText=eV.toLocaleString(); vEl.className=eV<0?"p-2 font-bold text-rose-600 bg-rose-100":"p-2 bg-indigo-100 font-bold text-indigo-900";} }); document.getElementById('grandTotalValue').innerText = '฿ ' + gT.toLocaleString(); }
+    async function saveInitStock() { 
+      const payload = priceTiers.map(p => ({ sku: p, qty: parseFloat(document.getElementById(`init_qty_${p}`).value) || 0 })); 
+      try {
+        const res = await apiCall('saveInitStock', {pin: currentPin, payload: payload});
+        alert(res.message);
+      } catch (e) {
+        alert("เกิดข้อผิดพลาดในการบันทึก");
+      }
+    }
+  </script>
+</body>
+</html>
