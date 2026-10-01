@@ -1,1 +1,23 @@
-{"name": "IDEA FASHION POS","short_name": "IDEA FASHION","start_url": "./index.html","display": "standalone","background_color": "#f1f5f9","theme_color": "#c22055","description": "ระบบจัดการหน้าร้าน IDEA FASHION","icons": $$ { "src": "https://i.postimg.cc/x10n8rW9/830562405-1623844549331660-6803901096834623733-n-(1).png", "sizes": "192x192", "type": "image/png" }, { "src": "https://i.postimg.cc/x10n8rW9/830562405-1623844549331660-6803901096834623733-n-(1).png", "sizes": "512x512", "type": "image/png" } $$}
+{
+  "name": "IDEA FASHION POS",
+  "short_name": "IDEA FASHION",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#c22055",
+  "description": "ระบบจัดการหน้าร้าน IDEA FASHION",
+  "icons": [
+    {
+      "src": "https://i.imgur.com/KqW4QZf.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.imgur.com/KqW4QZf.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
